@@ -47,11 +47,20 @@ start_tor_clients() {
 
 # Signal processing loop
 while true; do
-  sleep $((RANDOM % 301 + 300))
+  sleep 120
+  count=$(pidof tor | wc -w)
+  if [ "$count" -ge 10 ]; then
+      echo "There are at least 10 instances of Tor running."
   for pid in $(pidof tor); do
     kill -USR1 $pid
     echo "Renewing circuit for $pid"
-  done  
+  done
+  
+  else
+      sleep 30
+  fi
+  sleep $((RANDOM % 301 + 300))
+  
 done &
 
 # Start processes
