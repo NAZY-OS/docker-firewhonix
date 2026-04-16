@@ -47,7 +47,7 @@ start_tor_clients() {
 
 # Signal processing loop
 while true; do
-  sleep 120
+  sleep 90
   count=$(pidof tor | wc -w)
   if [ "$count" -ge 10 ]; then
       echo "There are at least 10 instances of Tor running."
@@ -58,6 +58,7 @@ while true; do
   
   else
       sleep 30
+      continue
   fi
   sleep $((RANDOM % 301 + 300))
   
