@@ -14,12 +14,12 @@ if [[ "$response" == "y" || "$response" == "Y" ]]; then
         -p $EXTERNAL_PORTS_9051_9062:$EXTERNAL_PORTS_9051_9062 \
         -p $EXTERNAL_PORT_9080:$EXTERNAL_PORT_9080 \
         --network host \
-        firewhonix:1.1 /bin/sh -c "echo 'Container started' && bash"
+        firewhonix:1.1 /bin/sh -c "echo 'Container started' && sh -c 'start.sh &';bash"
 else
     docker run --rm \
         -p $EXTERNAL_PORT_4711:$EXTERNAL_PORT_4711 \
         -p $EXTERNAL_PORTS_9051_9062:$EXTERNAL_PORTS_9051_9062 \
         -p $EXTERNAL_PORT_9080:$EXTERNAL_PORT_9080 \
         --network host \
-        firewhonix:1.1 /bin/sh -c "echo 'Container started' && ls -lha && bash"
+        firewhonix:1.1 /bin/sh -c "echo 'Container started' && ls -lha && sh -c 'start.sh &'; bash"
 fi
