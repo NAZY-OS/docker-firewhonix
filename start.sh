@@ -24,7 +24,7 @@ start_tor_clients() {
     chown toranon:toranon "$tor_data_dir"
     
     # Start the Tor instance with specific parameters and redirect output
-    sudo tor --User toranon --SocksPort "$port" --ControlPort "$((port + 100))" \
+    sudo tor --User tor --SocksPort "$port" --ControlPort "$((port + 100))" \
         --DataDirectory "$tor_data_dir" \
         --Sandbox 1 \
         --HardwareAccel 1 \
@@ -63,6 +63,9 @@ while true; do
   sleep $((RANDOM % 301 + 300))
   
 done &
+
+
+dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml &
 
 # Start processes
 /sbin/start_dispatcher.sh &

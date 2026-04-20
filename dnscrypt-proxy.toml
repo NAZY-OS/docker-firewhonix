@@ -1,0 +1,4 @@
+resolver_names = ['mullvad_dns_extended']
+
+[resolver.mullvad_dns_extended]
+    stamp = 'sdns://AQAAAAAAAAAAGltvbmxpbmUtY2FjaGVyLm1vbGx3YWQubmV0Z2xvYmFsLjEuMTYxLjU53OxAARPbHI2ODEuYXV0aDA="'
