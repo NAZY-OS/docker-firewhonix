@@ -12,7 +12,7 @@ start_tor_clients() {
 
   # Create the directory if it does not exist
   #mkdir -p "$base_tmp_dir"
-  mount -t tmpfs -o size=1G tmpfs "$base_tmp_dir"
+  mount -t tmpfs -o size=1G tmpfs "$base_tmp_dir" 2> /dev/null
 
   for i in $(seq 1 $MAX_INSTANCES); do
     port=$((TOR_PORT_BASE + i - 1))
