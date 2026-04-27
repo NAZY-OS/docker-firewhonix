@@ -11,7 +11,8 @@ start_tor_clients() {
   base_tmp_dir="/mnt/ramdisk"  # Make sure this is created
 
   # Create the directory if it does not exist
-  mkdir -p "$base_tmp_dir"
+  #mkdir -p "$base_tmp_dir"
+  mount -t tmpfs -o size=1G tmpfs "$base_tmp_dir"
 
   for i in $(seq 1 $MAX_INSTANCES); do
     port=$((TOR_PORT_BASE + i - 1))
