@@ -22,7 +22,7 @@ start_tor_clients() {
     mkdir -p "$tor_data_dir"
     
     # Change the ownership of the folder
-    chown toranon:toranon "$tor_data_dir"
+    chown tor:tor "$tor_data_dir"
     
     # Start the Tor instance with specific parameters and redirect output
     sudo tor --User tor --SocksPort "$port" --ControlPort "$((port + 100))" \
@@ -65,8 +65,8 @@ while true; do
   
 done &
 
-
-dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml &
+# Start dnscrypt-proxy client
+#dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml &
 
 # Start processes
 /sbin/start_dispatcher.sh &
