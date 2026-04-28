@@ -19,8 +19,8 @@ start_dispatch_proxy() {
   formatted_ports=${formatted_ports% }
 
   # Start the Dispatch Proxy with the specified options
-  setcap cap_net_raw=eip /bin/go-dispatch-proxy
-  /bin/go-dispatch-proxy -lport 4711 --tunnel $formatted_ports &
+  setcap cap_net_raw=eip /usr/bin/go-dispatch-proxy
+  /usr/bin/go-dispatch-proxy -lport 4711 --tunnel $formatted_ports &
 
   echo "Started Dispatch Proxy on port 4711 with ports: $formatted_ports"
 }
