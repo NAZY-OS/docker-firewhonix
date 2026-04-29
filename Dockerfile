@@ -19,7 +19,10 @@ RUN apk update && apk add --no-cache \
     libcap \
     dnsmasq \
     dnscrypt-proxy \
-    dnscrypt-proxy-openrc
+    dnscrypt-proxy-openrc \
+    libunwind \
+    libevent \
+    stubby
 
 # Optionally, upgrade pip for Python 3 to the latest version
 #RUN python3 -m pip install --upgrade pip
