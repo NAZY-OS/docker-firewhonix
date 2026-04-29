@@ -67,6 +67,7 @@ done &
 
 # Start dnscrypt-proxy client
 #dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml &
+stubby -l &
 
 # Start processes
 /sbin/start_dispatcher.sh &
