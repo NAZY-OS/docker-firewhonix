@@ -21,5 +21,5 @@ else
         -p $EXTERNAL_PORTS_9051_9062:$EXTERNAL_PORTS_9051_9062 \
         -p $EXTERNAL_PORT_9080:$EXTERNAL_PORT_9080 \
         --network host \
-        firewhonix:1.1 /bin/sh -c "echo 'Container started' && ls -lha && sh -c 'start.sh &'; bash"
+        firewhonix:1.1 /bin/sh -c "echo 'Container started' && ls -lha && sh -c 'start.sh &'"
 fi
