@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER=firewhonix:1.1
+CONTAINER=firewhonix:1.2
 
 # Remove all Docker containers
 docker rm -f ${CONTAINER}
