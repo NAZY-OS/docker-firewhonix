@@ -1,6 +1,11 @@
 # Base Image
 FROM alpine:latest
 
+# Create a non-root user
+# Create a non-root user and group for Tor
+RUN addgroup -S tor && \
+    adduser -S -G tor tor && \
+    adduser -D appuser
 
 # Update and install required packages
 RUN apk update && apk add --no-cache \
@@ -35,6 +40,10 @@ RUN git clone https://github.com/extremecoders-re/go-dispatch-proxy /tmp/go-disp
     mv go-dispatch-proxy /usr/bin/go-dispatch-proxy && \
     rm -rf /tmp/go-dispatch-proxy
 
+# Set GOPATH and add Go to PATH
+ENV GOPATH=/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
 # Copy start scripts
 COPY start.sh /sbin/start.sh
 COPY start_dispatcher.sh /sbin/start_dispatcher.sh
@@ -64,6 +73,9 @@ RUN /bin/sh -c "chmod 755 /sbin/start_dispatcher.sh \
                 /usr/bin/go-dispatch-proxy \
                 /sbin/start.sh"
 
+
+# Set working directory
+WORKDIR /app
 
 # Expose ports
 EXPOSE 4711 9051-9062 9080
