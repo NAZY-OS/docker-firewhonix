@@ -78,7 +78,7 @@ RUN /bin/sh -c "chmod 755 /sbin/start_dispatcher.sh \
 WORKDIR /app
 
 # Expose ports
-EXPOSE 4711 9061-9072 9080
+EXPOSE 4711
 
 # Start Tor and the proxy
 CMD ["/sbin/start.sh"]

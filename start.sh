@@ -65,7 +65,7 @@ start_tor_clients() {
 # Every cycle, check running Tor process count; if >= threshold, signal them to renew circuits.
 while true; do
   # Wait before checking process count
-  sleep 90
+  sleep 30
 
   # Count number of Tor processes
   count=$(pidof tor | wc -w)
