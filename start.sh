@@ -47,6 +47,12 @@ start_tor_clients() {
         --ClientOnly 1 \
         --DisableNetwork 0 \
         --UseBridges 0 \
+        --StrictNodes 1 \
+        --MaxCircuitDirtiness 40960 \
+        --MaxClientCircuitsPending 200 \
+        --EnforceDistinctSubnets 0 \
+        --CircuitStreamTimeout 300 \
+        --UseEntryGuards 0 \
         --DisableDebuggerAttachment 1 \
         --AvoidDiskWrites 1 1> /dev/null &
 
