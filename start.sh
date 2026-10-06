@@ -37,7 +37,7 @@ start_tor_clients() {
     # IMPORTANT:
     # You requested "Control ports" should be 100 higher than the SOCKS port.
     # That means: ControlPort = SocksPort + 100
-    sudo tor --User tor --SocksPort "$port" --ControlPort "$((port + 100))" \
+        sudo tor --User tor --SocksPort "$port" --ControlPort "$((port + 100))" \
         --DataDirectory "$tor_data_dir" \
         --Sandbox 1 \
         --HardwareAccel 1 \
@@ -48,11 +48,11 @@ start_tor_clients() {
         --DisableNetwork 0 \
         --UseBridges 0 \
         --StrictNodes 1 \
-        --MaxCircuitDirtiness 40960 \
+        --MaxCircuitDirtiness 1200 \
         --MaxClientCircuitsPending 200 \
         --EnforceDistinctSubnets 0 \
         --CircuitStreamTimeout 300 \
-        --UseEntryGuards 0 \
+        --UseEntryGuards 1 \
         --DisableDebuggerAttachment 1 \
         --AvoidDiskWrites 1 1> /dev/null &
 
