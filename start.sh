@@ -43,7 +43,7 @@ start_tor_clients() {
         --HardwareAccel 1 \
         --BandwidthRate 400000 \
         --BandwidthBurst 400000 \
-        --ExcludeExitNodes '{us},{uk},{ca},{au},{nz},{dk},{fr},{nl},{no},{de},{be},{se},{es},{it},{at},{fi},{ru}' \
+        --ExcludeExitNodes {us},{uk},{ca},{au},{nz},{dk},{fr},{nl},{no},{de},{be},{it},{es},{se},{sg},{jp},{il},{kr},{ru},{by},{am},{cn},{ir},{kp},{kz},{kg},{tj},{sy} \
         --ClientOnly 1 \
         --DisableNetwork 0 \
         --UseBridges 0 \
