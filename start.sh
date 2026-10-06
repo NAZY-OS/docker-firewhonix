@@ -41,8 +41,8 @@ start_tor_clients() {
         --DataDirectory "$tor_data_dir" \
         --Sandbox 1 \
         --HardwareAccel 1 \
-        --BandwidthBurst 1547483647 \
-        --BandwidthRate 1547483647 \
+        --BandwidthRate 400000 \
+        --BandwidthBurst 400000 \
         --ExcludeExitNodes '{us},{uk},{ca},{au},{nz},{dk},{fr},{nl},{no},{de},{be},{se},{es},{it},{at},{fi},{ru}' \
         --ClientOnly 1 \
         --DisableNetwork 0 \
