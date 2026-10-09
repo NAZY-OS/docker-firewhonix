@@ -52,7 +52,13 @@ start_tor_clients() {
         --MaxClientCircuitsPending 200 \
         --EnforceDistinctSubnets 0 \
         --CircuitStreamTimeout 300 \
+        --KeepalivePeriod 60 \
+        --CircuitBuildTimeout 30 \
+        --LearnCircuitBuildTimeout 0 \
+        --MaxCircuitDirtiness 600 \
+        --CircuitStreamTimeout 600 \
         --UseEntryGuards 1 \
+        --NumEntryGuards 6 \
         --DisableDebuggerAttachment 1 \
         --AvoidDiskWrites 1 1> /dev/null &
 
