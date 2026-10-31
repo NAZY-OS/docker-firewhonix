@@ -27,6 +27,8 @@ RUN apk update && apk add --no-cache \
     dnscrypt-proxy-openrc \
     libunwind \
     libevent \
+    lsof \
+    nftables \
     stubby
 
 # Optionally, upgrade pip for Python 3 to the latest version
@@ -38,7 +40,9 @@ RUN git clone https://github.com/extremecoders-re/go-dispatch-proxy /tmp/go-disp
     go build && \
     chmod +x go-dispatch-proxy && \
     mv go-dispatch-proxy /usr/bin/go-dispatch-proxy && \
-    rm -rf /tmp/go-dispatch-proxy
+    rm -rf /tmp/go-dispatch-proxy && \
+    setcap cap_net_raw=eip /usr/bin/go-dispatch-proxy
+
 
 # Set GOPATH and add Go to PATH
 ENV GOPATH=/go
@@ -52,6 +56,10 @@ RUN chmod +x /sbin/start.sh; chmod +x /sbin/start_dispatcher.sh
 
 # Copy dnscrypt-proxy settings
 COPY dnscrypt-proxy.toml /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+
+# Copy port_filter.sh
+COPY port_filter.sh /usr/local/bin/port_filter.sh
+RUN chmod +x /usr/local/bin/port_filter.sh
 
 # Generate dnscrypt config
 #COPY generate-dnscrypt-config.sh /sbin/generate-dnscrypt-config.sh 

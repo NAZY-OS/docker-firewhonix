@@ -6,108 +6,161 @@ TOR_PORT_BASE=9061  # Adjust to the port range used by your Docker/script setup
 # Maximum number of Tor instances
 MAX_INSTANCES=12
 
+# Temporary directory for Tor instances
+BASE_TMP_DIR="/mnt/ramdisk"  # Ensure this path exists or is mountable
+
 start_tor_clients() {
-  # Use a temporary directory in RAM (e.g., tmpfs)
-  base_tmp_dir="/mnt/ramdisk"  # Ensure this path exists or is mountable
-
   # Mount tmpfs to keep Tor data in memory (best performance)
-  mount -t tmpfs -o size=1G tmpfs "$base_tmp_dir" 2> /dev/null
+  mount -t tmpfs -o size=1G tmpfs "$BASE_TMP_DIR" 2> /dev/null
 
-  # Track ports (optional; the original script tries to store them)
-  ports=""
+  # Track ports
+  PORTS=""
 
-  for i in $(seq 1 $MAX_INSTANCES); do
+  for I in $(seq 1 "$MAX_INSTANCES"); do
     # Compute the SOCKS port for this instance
-    port=$((TOR_PORT_BASE + i - 1))
+    PORT=$((TOR_PORT_BASE + I - 1))
 
-    # Save SOCKS port (for later writing into /tmp/tor_ports)
-    if [ -z "$ports" ]; then
-      ports="$port"
+    # Save SOCKS port
+    if [ -z "$PORTS" ]; then
+      PORTS="$PORT"
     else
-      ports="$ports,$port"
+      PORTS="$PORTS,$PORT"
     fi
 
     # Create a unique folder for each Tor instance
-    tor_data_dir="$base_tmp_dir/tor_instance_$port"
-    mkdir -p "$tor_data_dir"
+    TOR_DATA_DIR="$BASE_TMP_DIR/tor_instance_$PORT"
+    mkdir -p "$TOR_DATA_DIR"
 
     # Set ownership so the tor user can write its data directory
-    chown tor:tor "$tor_data_dir"
+    chown tor:tor "$TOR_DATA_DIR"
 
-    # IMPORTANT:
-    # You requested "Control ports" should be 100 higher than the SOCKS port.
-    # That means: ControlPort = SocksPort + 100
-        sudo tor --User tor --SocksPort "$port" --ControlPort "$((port + 100))" \
-        --DataDirectory "$tor_data_dir" \
-        --Sandbox 1 \
-        --HardwareAccel 1 \
-        --BandwidthRate 400000 \
-        --BandwidthBurst 400000 \
-        --ExcludeExitNodes {us},{uk},{ca},{au},{nz},{dk},{fr},{nl},{no},{de},{be},{it},{es},{se},{sg},{il},{kr},{ru},{by},{am},{cn},{ir},{kp},{kz},{kg},{tj},{sy} \
-        --ClientOnly 1 \
-        --DisableNetwork 0 \
-        --UseBridges 0 \
-        --StrictNodes 1 \
-        --IsolateDestAddr 1 \
-        --MaxClientCircuitsPending 200 \
-        --EnforceDistinctSubnets 0 \
-        --CircuitStreamTimeout 300 \
-        --KeepalivePeriod 60 \
-        --CircuitBuildTimeout 30 \
-        --LearnCircuitBuildTimeout 0 \
-        --MaxCircuitDirtiness 600 \
-        --CircuitStreamTimeout 600 \
-        --UseEntryGuards 1 \
-        --NumEntryGuards 6 \
-        --DisableDebuggerAttachment 1 \
-        --AvoidDiskWrites 1 1> /dev/null &
+    # Start Tor instance with all parameters
+    sudo tor \
+      --User tor \
+      --SocksPort "$PORT" \
+      --ControlPort "$((PORT + 100))" \
+      --DataDirectory "$TOR_DATA_DIR" \
+      --Sandbox 1 \
+      --HardwareAccel 1 \
+      --BandwidthRate 400000 \
+      --BandwidthBurst 400000 \
+      --ExcludeExitNodes {us},{uk},{ca},{au},{nz},{dk},{fr},{nl},{no},{de},{be},{it},{es},{se},{sg},{il},{kr},{ru},{by},{am},{cn},{ir},{kp},{kz},{kg},{tj},{sy} \
+      --ClientOnly 1 \
+      --DisableNetwork 0 \
+      --UseBridges 0 \
+      --StrictNodes 1 \
+      --MaxClientCircuitsPending 200 \
+      --EnforceDistinctSubnets 0 \
+      --CircuitStreamTimeout 300 \
+      --KeepalivePeriod 60 \
+      --CircuitBuildTimeout 30 \
+      --LearnCircuitBuildTimeout 0 \
+      --MaxCircuitDirtiness 600 \
+      --CircuitStreamTimeout 600 \
+      --UseEntryGuards 1 \
+      --NumEntryGuards 6 \
+      --DisableDebuggerAttachment 1 \
+      --AvoidDiskWrites 1 &
 
-    # Log started instance (visible)
-    echo "Started Tor client on SOCKS port $port with data directory $tor_data_dir (ControlPort=$((port+100)))"
+    # Log started instance
+    echo "Started Tor client on SOCKS port $PORT with data directory $TOR_DATA_DIR (ControlPort=$((PORT+100)))"
 
     # Give Tor a moment to start
     sleep 1
   done
 
-  # Save the SOCKS ports in a temporary file (space-separated)
-  echo "${ports//,/ }" > /tmp/tor_ports
+  # Save the SOCKS ports in a temporary file
+  echo "${PORTS//,/ }" > /tmp/tor_ports
 }
 
-# Signal processing loop:
-# Every cycle, check running Tor process count; if >= threshold, signal them to renew circuits.
-while true; do
-  # Wait before checking process count
-  sleep 30
+# Signal processing loop to renew circuits
+renew_circuits() {
+  while true; do
+    # Count number of Tor processes
+    COUNT=$(pidof tor | wc -w)
 
-  # Count number of Tor processes
-  count=$(pidof tor | wc -w)
+    # If at least 10 Tor instances are running, renew circuits
+    if [ "$COUNT" -ge 10 ]; then
+      echo "There are at least 10 instances of Tor running."
+      sleep 10
+      for PID in $(pidof tor); do
+        # Send USR1 to trigger circuit renewal
+        kill -USR1 "$PID"
+        echo "Renewing circuit for PID $PID"
+      done
+    else
+      # If fewer than threshold Tor instances are running, wait
+      sleep 10
+      continue
+    fi
 
-  # If at least 10 Tor instances are running, renew circuits for all of them
-  if [ "$count" -ge 10 ]; then
-    echo "There are at least 10 instances of Tor running."
+    # Random delay between 300 and 600 seconds
+    sleep $((RANDOM % 301 + 300))
+  done &
+}
 
-    for pid in $(pidof tor); do
-      # Send USR1 to trigger Tor to renew circuits (as per Tor's signal handling)
-      kill -USR1 "$pid"
-      echo "Renewing circuit for PID $pid"
+running_init_since() {
+  echo
+  echo "_______________________________________________"
+  echo "Starting go-dispatcher for Loadbalancing Tor!"
+  echo "_______________________________________________"
+  echo
+
+  START_TEXT=$(date '+%Y-%m-%d.%H:%M:%S')
+  echo "Firewhonix Loadbalancer is running since $START_TEXT"
+
+  (
+    while true; do
+      sleep 15
+      PID_COUNT=$(pidof tor 2>/dev/null | wc -w)
+      echo "Firewhonix is running with $PID_COUNT PIDs"
     done
+  ) &
+}
 
-  else
-    # If fewer than threshold Tor instances are running, wait a bit and try again
-    sleep 30
-    continue
-  fi
+start_dispatch_proxy() {
+  while true; do
+    FORMATTED_LOCALHOSTPORTS=$(
+      sudo lsof -nP -a -c tor -iTCP -sTCP:LISTEN 2>/dev/null |
+        sed -n 's/.*\(127[^ ]*\) (LISTEN).*/\1/p' |
+        sort -u |
+        paste -sd' ' -
+    )
 
-  # Random delay between 300 and 600 seconds to stagger renewals
-  sleep $((RANDOM % 301 + 300))
-done &
+    if [ -z "$FORMATTED_LOCALHOSTPORTS" ]; then
+      echo "ERROR: No Tor listening ports found. Check if Tor instances are running."
+      echo
+      echo "Possible causes:"
+      echo "1. Tor processes crashed"
+      echo "2. Port conflicts"
+      echo "3. Permission issues"
+      echo "4. Insufficient system resources"
+      echo
+    else
+      echo "Balancing to these ports: $FORMATTED_LOCALHOSTPORTS"
 
-# Start dnscrypt-proxy client (disabled/commented in your script)
-# dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml &
+      if [ -n "$PROXY_PID" ]; then
+        kill "$PROXY_PID" 2>/dev/null
+        wait "$PROXY_PID" 2>/dev/null
+      fi
 
-# Start stubby (DNS-over-TLS proxy)
-stubby -l &
+      /usr/bin/go-dispatch-proxy \
+        -lhost 127.0.0.1 \
+        -lport "$PPORT" \
+        -tunnel "$FORMATTED_LOCALHOSTPORTS" &
+      PROXY_PID=$!
+    fi
 
-# Start dispatcher and Tor clients
-/sbin/start_dispatcher.sh &
+    sleep 45
+  done &
+}
+
+# Main execution
 start_tor_clients
+running_init_since
+sleep 20
+renew_circuits
+start_dispatch_proxy
+
+# Keep script running
+wait
