@@ -59,7 +59,7 @@ start_dispatch_proxy() {
   formatted_ports=${formatted_ports% }
 
   # Start the Dispatch Proxy with the specified options
-  /usr/bin/go-dispatch-proxy -lhost 127.0.0.1 -lport ${PPORT} -tunnel  $formatted_ports &
+  /usr/bin/go-dispatch-proxy -tunnel -lhost 127.0.0.1 -lport ${PPORT} $formatted_ports &
   echo "Started Dispatch Proxy on port 127.0.1:${PPORT}"
   echo 
   echo "Balancing to this ip + ports: $formatted_ports"
