@@ -139,10 +139,10 @@ start_dispatch_proxy() {
     else
       echo "Balancing to these ports: $FORMATTED_LOCALHOSTPORTS"
 
-      if [ -n "$PROXY_PID" ]; then
-        kill "$PROXY_PID" 2>/dev/null
-        wait "$PROXY_PID" 2>/dev/null
-      fi
+      #if [ -n "$PROXY_PID" ]; then
+      #  kill "$PROXY_PID" 2>/dev/null
+      #  wait "$PROXY_PID" 2>/dev/null
+      #fi
 
       /usr/bin/go-dispatch-proxy \
         -lhost 127.0.0.1 \
