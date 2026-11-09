@@ -113,7 +113,7 @@ running_init_since() {
     while true; do
       sleep 15
       PID_COUNT=$(pidof tor 2>/dev/null | wc -w)
-      echo "Firewhonix is running with $PID_COUNT PIDs"
+      echo "Firewhonix is running with $PID_COUNT PIDs on 127.0.0.1:4711"
     done
   ) &
 }
