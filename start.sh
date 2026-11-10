@@ -9,6 +9,10 @@ MAX_INSTANCES=12
 # Temporary directory for Tor instances
 BASE_TMP_DIR="/mnt/ramdisk"  # Ensure this path exists or is mountable
 
+# Load the SOCKS ports from the temporary file
+read -r PORTS < /tmp/tor_ports
+FORMATTED_LOCALHOSTPORTS=$(echo "$PORTS" | sed 's/ /,/g')
+
 start_tor_clients() {
   # Mount tmpfs to keep Tor data in memory (best performance)
   mount -t tmpfs -o size=1G tmpfs "$BASE_TMP_DIR" 2> /dev/null
@@ -102,7 +106,7 @@ renew_circuits() {
 running_init_since() {
   echo
   echo "_______________________________________________"
-  echo "Starting go-dispatcher for Loadbalancing Tor!"
+  echo "Starting go-dispatch-proxy for Loadbalancing Tor!"
   echo "_______________________________________________"
   echo
 
@@ -119,6 +123,9 @@ running_init_since() {
 }
 
 start_dispatch_proxy() {
+  # Set the port to 4711 as requested
+  PPORT=4711
+
   while true; do
     if [ -n "$PROXY_PID" ]; then
       kill "$PROXY_PID" 2>/dev/null
@@ -128,6 +135,7 @@ start_dispatch_proxy() {
     /usr/bin/go-dispatch-proxy \
       -lhost 127.0.0.1 \
       -lport "$PPORT" \
+      -tunnel \
       "$FORMATTED_LOCALHOSTPORTS" &
     PROXY_PID=$!
 
