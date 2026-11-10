@@ -22,9 +22,9 @@ start_tor_clients() {
 
     # Save SOCKS port
     if [ -z "$PORTS" ]; then
-      PORTS="$PORT"
+      PORTS="127.0.0.1:$PORT"
     else
-      PORTS="$PORTS,$PORT"
+      PORTS="$PORTS,127.0.0.1:$PORT"
     fi
 
     # Create a unique folder for each Tor instance
@@ -120,24 +120,7 @@ running_init_since() {
 
 start_dispatch_proxy() {
   while true; do
-    FORMATTED_LOCALHOSTPORTS=$(
-      sudo lsof -nP -a -c tor -iTCP -sTCP:LISTEN 2>/dev/null |
-        sed -n 's/.*\(127[^ ]*\) (LISTEN).*/\1/p' |
-        sort -u |
-        paste -sd' ' -
-    )
 
-    if [ -z "$FORMATTED_LOCALHOSTPORTS" ]; then
-      echo "ERROR: No Tor listening ports found. Check if Tor instances are running."
-      echo
-      echo "Possible causes:"
-      echo "1. Tor processes crashed"
-      echo "2. Port conflicts"
-      echo "3. Permission issues"
-      echo "4. Insufficient system resources"
-      echo
-    else
-      echo "Balancing to these ports: $FORMATTED_LOCALHOSTPORTS"
 
       #if [ -n "$PROXY_PID" ]; then
       #  kill "$PROXY_PID" 2>/dev/null
