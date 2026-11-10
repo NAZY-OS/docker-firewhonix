@@ -120,19 +120,16 @@ running_init_since() {
 
 start_dispatch_proxy() {
   while true; do
-
-
-      #if [ -n "$PROXY_PID" ]; then
-      #  kill "$PROXY_PID" 2>/dev/null
-      #  wait "$PROXY_PID" 2>/dev/null
-      #fi
-
-      /usr/bin/go-dispatch-proxy \
-        -lhost 127.0.0.1 \
-        -lport "$PPORT" \
-        "$FORMATTED_LOCALHOSTPORTS" &
-      PROXY_PID=$!
+    if [ -n "$PROXY_PID" ]; then
+      kill "$PROXY_PID" 2>/dev/null
+      wait "$PROXY_PID" 2>/dev/null
     fi
+
+    /usr/bin/go-dispatch-proxy \
+      -lhost 127.0.0.1 \
+      -lport "$PPORT" \
+      "$FORMATTED_LOCALHOSTPORTS" &
+    PROXY_PID=$!
 
     sleep 45
   done &
