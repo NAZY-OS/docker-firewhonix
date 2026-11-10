@@ -13,8 +13,8 @@ else
     PORTS=""
 fi
 
-# Format ports for go-dispatch-proxy
-FORMATTED_PORTS=$(echo "$PORTS" | sed 's/ /,/g')
+# Format ports for go-dispatch-proxy (space-separated)
+FORMATTED_PORTS=$(echo "$PORTS" | tr ',' ' ')
 
 start_tor_clients() {
     # Create tmpfs for in-memory storage
@@ -70,7 +70,7 @@ start_tor_clients() {
 
     # Save ports to file
     echo "$PORTS" > /tmp/tor_ports
-    FORMATTED_PORTS=$(echo "$PORTS" | sed 's/ /,/g')
+    FORMATTED_PORTS=$(echo "$PORTS" | tr ',' ' ')
 }
 
 renew_circuits() {
@@ -136,7 +136,7 @@ start_dispatch_proxy() {
             -lhost 127.0.0.1 \
             -lport "$DISPATCHER_PORT" \
             -tunnel \
-            "$FORMATTED_PORTS" &
+            $FORMATTED_PORTS &
         PROXY_PID=$!
 
         sleep 45
