@@ -147,7 +147,7 @@ start_dispatch_proxy() {
       /usr/bin/go-dispatch-proxy \
         -lhost 127.0.0.1 \
         -lport "$PPORT" \
-        -tunnel "$FORMATTED_LOCALHOSTPORTS" &
+        "$FORMATTED_LOCALHOSTPORTS" &
       PROXY_PID=$!
     fi
 
