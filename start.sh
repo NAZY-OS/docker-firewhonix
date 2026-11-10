@@ -1,44 +1,30 @@
 #!/bin/bash
 
 # Base port for Tor instances (SOCKS proxies)
-TOR_PORT_BASE=9061  # Adjust to the port range used by your Docker/script setup
-
-# Maximum number of Tor instances
+TOR_PORT_BASE=9061
 MAX_INSTANCES=12
-
-# Temporary directory for Tor instances
-BASE_TMP_DIR="/mnt/ramdisk"  # Ensure this path exists or is mountable
+BASE_TMP_DIR="/mnt/ramdisk"
 
 # Load the SOCKS ports from the temporary file
 read -r PORTS < /tmp/tor_ports
 FORMATTED_LOCALHOSTPORTS=$(echo "$PORTS" | sed 's/ /,/g')
 
 start_tor_clients() {
-  # Mount tmpfs to keep Tor data in memory (best performance)
   mount -t tmpfs -o size=1G tmpfs "$BASE_TMP_DIR" 2> /dev/null
-
-  # Track ports
   PORTS=""
 
   for I in $(seq 1 "$MAX_INSTANCES"); do
-    # Compute the SOCKS port for this instance
     PORT=$((TOR_PORT_BASE + I - 1))
-
-    # Save SOCKS port
     if [ -z "$PORTS" ]; then
       PORTS="127.0.0.1:$PORT"
     else
       PORTS="$PORTS,127.0.0.1:$PORT"
     fi
 
-    # Create a unique folder for each Tor instance
     TOR_DATA_DIR="$BASE_TMP_DIR/tor_instance_$PORT"
     mkdir -p "$TOR_DATA_DIR"
-
-    # Set ownership so the tor user can write its data directory
     chown tor:tor "$TOR_DATA_DIR"
 
-    # Start Tor instance with all parameters
     sudo tor \
       --User tor \
       --SocksPort "$PORT" \
@@ -66,65 +52,67 @@ start_tor_clients() {
       --DisableDebuggerAttachment 1 \
       --AvoidDiskWrites 1 &
 
-    # Log started instance
-    echo "Started Tor client on SOCKS port $PORT with data directory $TOR_DATA_DIR (ControlPort=$((PORT+100)))"
-
-    # Give Tor a moment to start
+    echo "Started Tor client on SOCKS port $PORT (ControlPort=$((PORT+100)))"
     sleep 1
   done
 
-  # Save the SOCKS ports in a temporary file
   echo "${PORTS//,/ }" > /tmp/tor_ports
 }
 
-# Signal processing loop to renew circuits
 renew_circuits() {
   while true; do
-    # Count number of Tor processes
     COUNT=$(pidof tor | wc -w)
-
-    # If at least 10 Tor instances are running, renew circuits
     if [ "$COUNT" -ge 10 ]; then
-      echo "There are at least 10 instances of Tor running."
-      sleep 10
+      echo "Renewing circuits for $COUNT Tor instances..."
       for PID in $(pidof tor); do
-        # Send USR1 to trigger circuit renewal
         kill -USR1 "$PID"
-        echo "Renewing circuit for PID $PID"
+        echo "  - Renewed circuit for PID $PID"
       done
-    else
-      # If fewer than threshold Tor instances are running, wait
-      sleep 10
-      continue
     fi
-
-    # Random delay between 300 and 600 seconds
     sleep $((RANDOM % 301 + 300))
   done &
 }
 
 running_init_since() {
   echo
-  echo "_______________________________________________"
-  echo "Starting go-dispatch-proxy for Loadbalancing Tor!"
-  echo "_______________________________________________"
+  echo "==============================================="
+  echo "Firewhonix Loadbalancer gestartet!"
+  echo "==============================================="
   echo
 
-  START_TEXT=$(date '+%Y-%m-%d.%H:%M:%S')
-  echo "Firewhonix Loadbalancer is running since $START_TEXT"
+  START_TEXT=$(date '+%Y-%m-%d %H:%M:%S')
+  echo "Betriebszeit: $START_TEXT"
+  echo
 
   (
     while true; do
       sleep 15
       PID_COUNT=$(pidof tor 2>/dev/null | wc -w)
-      echo "Firewhonix is running with $PID_COUNT PIDs on 127.0.0.1:4711"
+      ACTIVE_PIDS=$(pidof tor 2>/dev/null)
+
+      echo "==============================================="
+      echo "Firewhonix Status:"
+      echo "-----------------------------------------------"
+      echo "Aktive Tor-Prozesse (PIDs): $PID_COUNT"
+      echo "Verwendete Ports: $FORMATTED_LOCALHOSTPORTS"
+      echo "go-dispatch-proxy Parameter:"
+      echo "  -lhost 127.0.0.1"
+      echo "  -lport 4711"
+      echo "  -tunnel"
+      echo "  $FORMATTED_LOCALHOSTPORTS"
+      echo "-----------------------------------------------"
+      echo "Aktive PIDs: $ACTIVE_PIDS"
+      echo "==============================================="
     done
   ) &
 }
 
 start_dispatch_proxy() {
-  # Set the port to 4711 as requested
   PPORT=4711
+
+  echo "Starte go-dispatch-proxy mit folgenden Parametern:"
+  echo "  /usr/bin/go-dispatch-proxy -lhost 127.0.0.1 -lport $PPORT -tunnel $FORMATTED_LOCALHOSTPORTS"
+  echo
 
   while true; do
     if [ -n "$PROXY_PID" ]; then
@@ -150,5 +138,4 @@ sleep 20
 renew_circuits
 start_dispatch_proxy
 
-# Keep script running
 wait
